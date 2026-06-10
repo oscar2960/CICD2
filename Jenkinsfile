@@ -18,15 +18,16 @@ pipeline {
         stage('Construir Imágenes Docker') {
             steps {
                 echo "Construyendo los contenedores de Base de Datos y Aplicación..."
-                sh 'docker-compose build'
+                // Actualizado a Docker Compose V2 (sin guion)
+                sh 'docker compose build'
             }
         }
 
         stage('Prueba de Integración (Ejecución)') {
             steps {
                 echo "Levantando servicios y verificando comunicación..."
-                // --abort-on-container-exit asegura que si el script de Python falla, el pipeline falle.
-                sh 'docker-compose up --abort-on-container-exit'
+                // Actualizado a Docker Compose V2 (sin guion)
+                sh 'docker compose up --abort-on-container-exit'
             }
         }
     }
@@ -34,8 +35,9 @@ pipeline {
     post {
         always {
             echo "Limpiando el entorno y eliminando contenedores..."
-            // Se ejecuta sin importar si las pruebas pasaron o fallaron
-           // sh 'docker-compose down -v'
+            // Esta línea se mantiene comentada para que puedas tomar tus evidencias visuales.
+            // Una vez tomes la captura de 'docker ps', quita las '//' para futuras ejecuciones.
+            // sh 'docker compose down -v'
         }
         success {
             echo "¡Integración Continua exitosa! Los contenedores se comunicaron correctamente."
