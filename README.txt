@@ -10,73 +10,81 @@ ENTREGA: Semana 3 - Construcción e Intercomunicación de Contenedores Docker
 --------------------------------------------------------------------------------
 1. DESCRIPCIÓN DEL PROYECTO
 --------------------------------------------------------------------------------
-Este repositorio contiene la solución técnica para la Entrega 1 (Semana 3) del 
-proyecto grupal de Integración Continua. 
+Este repositorio contiene la solución técnica y de infraestructura para las 
+entregas de las Semanas 3 y 5 del proyecto grupal de Integración Continua (CI).
 
-El objetivo principal de esta fase es implementar Docker como herramienta 
-fundamental de infraestructura para construir dos contenedores independientes 
-que logren comunicarse entre sí a través de una red interna.
+El sistema consta de una arquitectura backend multi-contenedor automatizada mediante 
+un pipeline de operaciones que valida de forma continua la correcta construcción, 
+despliegue e intercomunicación de los servicios.
 
-La arquitectura elegida para demostrar esta comunicación consta de:
-- Contenedor A: Una base de datos relacional (PostgreSQL).
-- Contenedor B: Una aplicación backend (Python) que verifica la conexión activa.
+Componentes principales:
+- Servidor de Base de Datos: Motor relacional SQL basado en PostgreSQL.
+- Aplicación de Verificación: Script en Python que valida la disponibilidad y 
+  conectividad de la base de datos en red.
+- Servidor de Automatización: Orquestador Jenkins que gestiona el ciclo de vida 
+  del código (Clonación, Construcción, Pruebas Integradas y Limpieza).
 
 --------------------------------------------------------------------------------
 2. ARQUITECTURA Y TECNOLOGÍAS UTILIZADAS
 --------------------------------------------------------------------------------
-- Docker: Para la creación y aislamiento de los entornos (contenedores).
-- Docker Compose: Para la orquestación, gestión de variables de entorno y 
-  creación de la red compartida entre los servicios.
-- Python 3.9 (Alpine/Slim): Lenguaje base para el script de prueba de conexión.
-- PostgreSQL 13 (Alpine): Motor de base de datos SQL.
-- Psycopg2: Adaptador de base de datos PostgreSQL para el lenguaje Python.
+- Docker: Para el aislamiento de entornos en contenedores independientes.
+- Docker Compose: Para la definición de la infraestructura como código (IaC), 
+  gestión de variables de entorno y establecimiento de la red interna compartida.
+- Jenkins: Gestor y motor de operaciones para el Pipeline de Integración Continua.
+- Python 3.9-slim: Imagen base optimizada para la ejecución de la app de pruebas.
+- PostgreSQL 13-alpine: Imagen ligera para el motor de base de datos SQL.
+- Psycopg2-binary: Adaptador de red para la conexión Python-PostgreSQL.
 
 --------------------------------------------------------------------------------
-3. ESTRUCTURA DE ARCHIVOS
+3. ESTRUCTURA DE ARCHIVOS DEL REPOSITORIO
 --------------------------------------------------------------------------------
 /
-|-- app.py               # Lógica de conexión a la base de datos.
-|-- requirements.txt     # Dependencias de Python (psycopg2).
-|-- Dockerfile           # Instrucciones de construcción de la imagen Python.
-|-- docker-compose.yml   # Configuración de servicios, puertos y redes.
-|-- README.txt           # Documentación y especificaciones del proyecto.
+|-- app.py               # Script de lógica de red y reintentos de conexión.
+|-- requirements.txt     # Definición de dependencias de software (psycopg2).
+|-- Dockerfile           # Instrucciones de compilación para el entorno Python.
+|-- docker-compose.yml   # Orquestador de contenedores, puertos y redes.
+|-- Jenkinsfile          # Tubería declarativa (Pipeline) para la automatización CI.
+|-- README.txt           # Guía de especificaciones y documentación general (v2).
 
 --------------------------------------------------------------------------------
-4. INSTRUCCIONES DE EJECUCIÓN (PASO A PASO)
+4. CONFIGURACIÓN E IMPLEMENTACIÓN DE JENKINS (PASO A PASO)
 --------------------------------------------------------------------------------
-Para ejecutar este proyecto en cualquier entorno local, asegúrate de tener 
-instalado Docker y Docker Compose.
+Para desplegar este pipeline en tu entorno de Jenkins, sigue detalladamente los 
+siguientes pasos operacionales:
 
-Paso 1: Clonar el repositorio.
-$ git clone <URL_DEL_REPOSITORIO>
-$ cd <NOMBRE_DE_LA_CARPETA>
+Paso 1: Desbloqueo Inicial de Jenkins
+Al levantar Jenkins por primera vez, el sistema solicitará una contraseña de 
+administrador. Esta se puede recuperar de dos maneras:
+- Revisando los registros de la consola (logs), ubicando la línea bajo el texto:
+  "Please use the following password to proceed to installation".
+- Consultando directamente el archivo del sistema en la ruta:
+  `/var/jenkins_home/secrets/initialAdminPassword`
+Introduce dicha clave alfanumérica en el navegador para desbloquear la plataforma.
 
-Paso 2: Construir y levantar los contenedores.
-Ejecuta el siguiente comando en la raíz del proyecto (donde se ubica el 
-archivo docker-compose.yml):
-$ docker-compose up --build
+Paso 2: Instalación de Complementos (Plugins)
+- Selecciona "Instalar complementos sugeridos" (Install suggested plugins).
+- Una vez dentro del panel de control, dirígete a: Administrar Jenkins -> 
+  Administrar Plugins -> Pestaña "Disponibles" e instala los siguientes:
+  * Docker Pipeline
+  * Docker plugin
+  Esto facultará a Jenkins para interpretar y ejecutar comandos de Docker en los scripts.
 
-Paso 3: Verificación de resultados.
-En la consola, observarás el proceso de descarga de imágenes y construcción.
-Una vez levantados los servicios, la terminal mostrará los logs combinados. 
-Busca la siguiente salida generada por el contenedor de la aplicación Python:
-
-"Intentando conectar a la base de datos en el host 'db'..."
-"¡Éxito! La aplicación Python y la base de datos PostgreSQL se están 
-comunicando correctamente."
-
-Paso 4: Detener los contenedores.
-Para apagar la infraestructura de manera segura y limpiar la red, utiliza:
-$ docker-compose down
+Paso 3: Creación y Vinculación del Pipeline (Job)
+1. En el panel principal, haz clic en "Nueva Tarea" (New Item).
+2. Asigna un nombre descriptivo (ej. 'Proyecto-Integracion-Continua') y elige la 
+   opción "Pipeline". Haz clic en OK.
+3. Desplázate hasta la sección inferior de "Pipeline" y configura:
+   - Definition: Selecciona "Pipeline script from SCM".
+   - SCM: Selecciona "Git".
+   - Repository URL: Pega el enlace HTTPS de tu repositorio de GitHub.
+   - Branch Specifier: Asegúrate de apuntar a la rama correcta (ej. '*/main').
+   - Script Path: Confirma que apunta exactamente a 'Jenkinsfile'.
+4. Haz clic en Guardar (Save).
 
 --------------------------------------------------------------------------------
-5. JUSTIFICACIÓN TÉCNICA
+5. CONTROL DE EJECUCIÓN Y CAPTURA DE REFERENCIAS VISUALES
 --------------------------------------------------------------------------------
-- Se utilizó la directiva 'depends_on' en el docker-compose.yml para asegurar 
-  que el contenedor de la aplicación no intente iniciar hasta que el contenedor 
-  de la base de datos esté en proceso de arranque.
-- El script 'app.py' incluye un mecanismo de reintentos (retries). Esto es una 
-  buena práctica en entornos DevOps, ya que PostgreSQL tarda unos segundos en 
-  estar listo para aceptar conexiones, incluso si su contenedor ya está activo.
-- Se utilizaron variables de entorno (environment) para pasar credenciales, 
-  evitando codificar contraseñas de forma rígida en el código fuente (Hardcoding).
+El pipeline declarativo está diseñado bajo la filosofía DevOps de "entornos 
+efímeros", lo que significa que levanta los contenedores, realiza las pruebas de 
+intercomunicación, y al finalizar con éxito ("success") ejecuta un bloque post-action 
+con `docker-compose down -v` para limpiar el servidor y liberar memoria.
