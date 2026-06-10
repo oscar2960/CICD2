@@ -37,7 +37,7 @@ pipeline {
             echo "Limpiando el entorno y eliminando contenedores..."
             // Esta línea se mantiene comentada para que puedas tomar tus evidencias visuales.
             // Una vez tomes la captura de 'docker ps', quita las '//' para futuras ejecuciones.
-            // sh 'docker compose down -v'
+            sh 'docker compose down -v'
         }
         success {
             echo "¡Integración Continua exitosa! Los contenedores se comunicaron correctamente."
